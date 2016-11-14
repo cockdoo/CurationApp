@@ -2,13 +2,14 @@
 
 header("Content-Type: text/html; charset=UTF-8");
 
-// require_once('../../config.php');
-// $con = mysql_connect(server, user, pass) or die(mysql_error());
-// mysql_select_db(myDatabase, $con) or die(mysql_error());
-// mysql_query('set names utf8',$con);
+require_once('../../config.php');
+$con = mysql_connect(server, user, pass) or die(mysql_error());
+mysql_select_db(myDatabase, $con) or die(mysql_error());
+mysql_query('set names utf8',$con);
+const myTable = "Curation";
 
 
-for ($i=13; $i < 14; $i++) { 
+for ($num=13; $num < 14; $num++) { 
   $url = "https://extraction.import.io/query/extractor/48bf96d6-27e3-4db4-abda-b62e8497c447?_apikey=191cc04eeaa3439b83e60fbdd2a4e502e5498cc8dfe8802423042475073cbb06c34bab9aeedcd6b42281ab57609fedbc3c39f037a44c2f214ec38b8963a39d00ee7e2b256cda855a61718d470286daa9&url=https%3A%2F%2Fgurutabi.gnavi.co.jp%2Fa%2Fp13%2F";
 
   // $json = file_get_contents($url);
@@ -23,9 +24,20 @@ for ($i=13; $i < 14; $i++) {
     $url = $data[$i]["title"][0]["href"];
     // $imageUrl = $data[$i]["thumbnail"][0]["src"];
     $date = $data[$i]["date"][0]["text"];
-    // echo $title."<br>";
-    echo $url."<br>";
+    echo $title."<br>";
+    // echo "<br>";
+    // echo $url."<br>";
     // echo $date."<br>";
+
+    // $searchUrl = str_replace("/", "\/", $url);
+    // $searchUrl = str_replace(":", "\:", $searchUrl);
+
+
+    //日付のフォーマットを変換
+    $date = str_replace("年", ".", $date);
+    $date = str_replace("月", ".", $date);
+    $date = str_replace("日", "", $date);
+
     detail($title, $url, $date);
   }
   echo "終了！";
@@ -33,28 +45,47 @@ for ($i=13; $i < 14; $i++) {
 
 function detail($title, $url, $date){
   $html = file_get_contents($url);
-  if($html != ""){
-      // preg_match( "/<p class=\"article-info__text\">(\[住所\])?(.*?)<br \/>/u", $html, $address);
+  if($html != "" && $html != nil){
+    preg_match( "/<img class=\"mainBg\" src=\"(.*?)\"/u", $html, $thumbnail);
+    $imageUrl = $thumbnail[1];
 
-      echo $html;  
+    preg_match_all( "/<p class=\"address\"><span class=\"icon-location\"><\/span>(.*?)>/u", $html, $address);
 
-      /*
-      if ($address[2] != nil) {
-        $latlng = get_gps_from_address($address[2]);  
+
+    for ($i=0; $i < 5; $i++) { 
+      if ($address[1][$i] != nil && $address[1][$i] != "") {
+        // echo $address[1][$i];
+        $latlng = get_gps_from_address($address[1][$i]);
         // var_dump($latlng);
-        if ($latlng != nil) {
-          // insertDB($title, $url, $imageUrl, $latlng['lat'], $latlng['lng'], $date, "ぐるたび"); 
-          // echo "<br>";
-        }        
+
+        if (count($latlng) == 2) {
+          //すでにDBにあるデータかどうか調べる
+          $query = "SELECT X(location) as lat, Y(location) as lng, url FROM ".myTable." where url = '".(string)$url."'";
+          $result = mysql_query($query) or die(mysql_error());
+          $already = false;
+          $responseArray = array();
+          while ($row = mysql_fetch_assoc($result)) {
+            // echo $row["lat"];
+            // echo $latlng["lat"];
+            if ($row["lat"] == $latlng["lat"] && $row["lng"] == $latlng["lng"]) {
+              $already = true;
+            }
+          }
+
+          if ($already == false) {
+            echo "挿入！";
+            insertDB($title, $url, $imageUrl, $latlng['lat'], $latlng['lng'], $date, "RETRIP");
+          }
+        }
       }
-      */
+    }      
   }else{
       echo "ファイルの取得に失敗しました";
   }
 }
 
 function insertDB($title, $url, $imageUrl, $lat, $lng, $date, $media) {
-  $query = "INSERT INTO Curation(
+  $query = "INSERT INTO ".myTable."(
   title,
   url,
   imageUrl,

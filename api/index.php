@@ -9,28 +9,49 @@ mysql_query('set names utf8',$con);
 
 $lat = $_GET["lat"];
 $lng = $_GET["lng"];
-$length = $_GET["length"];
+$num = $_GET["num"];
 
-$query = "SELECT id, X(location) as lat, Y(location) as lng, GLength(GeomFromText(CONCAT('LineString(".$lat." ".$lng.",', X(location), ' ', Y(location),')'))) AS length, title, url, imageUrl, date, media, tag FROM Curation HAVING length <= ".$length."/112.12/1000 ORDER BY length";
+$length = array("100", "500", "1000", "3000", "5000", "1000000000000");
 
-$result = mysql_query($query) or die(mysql_error());
+$latArray = explode(",", $lat);
+$lngArray = explode(",", $lng);
+
 
 $responseArray = array();
 
-while ($row = mysql_fetch_assoc($result)) {
 
-    $responseRowArray = array(
-        "id" => $row["id"],
-        "lat" => $row["lat"],
-        "lng" => $row["lng"],
-        "title" => $row["title"],
-        "url" => $row["url"],
-        "imageUrl" => $row["imageUrl"],
-        "date" => $row["date"],
-        "media" => $row["media"],
-        "tag" => $row["tag"]
-        );
-    array_push($responseArray, $responseRowArray);
+for ($h=0; $h < count($length); $h++) { 
+    for ($i=0; $i < count($latArray); $i++) {
+        $query = "SELECT id, X(location) as lat, Y(location) as lng, GLength(GeomFromText(CONCAT('LineString(".$latArray[$i]." ".$lngArray[$i].",', X(location), ' ', Y(location),')'))) AS length, title, url, imageUrl, date, media, tag FROM Curation HAVING length <= ".$length[$h]."/112.12/1000 ORDER BY length";
+        $result = mysql_query($query) or die(mysql_error());
+
+        while ($row = mysql_fetch_assoc($result)) {
+
+            $already = false;
+            for ($j=0; $j < count($responseArray); $j++) { 
+                if ($row["url"] == $responseArray[$j]["url"]) {
+                    $already = true;
+                }
+            }
+            if ($already == false) {
+                $responseRowArray = array(
+                    "id" => $row["id"],
+                    "lat" => $row["lat"],
+                    "lng" => $row["lng"],
+                    "title" => $row["title"],
+                    "url" => $row["url"],
+                    "imageUrl" => $row["imageUrl"],
+                    "date" => $row["date"],
+                    "media" => $row["media"],
+                    "tag" => $row["tag"]
+                    );
+                array_push($responseArray, $responseRowArray);
+            }
+        }
+    }
+    if (count($responseArray) > $num) {
+        break;
+    }
 }
 
 $responseJSON = json_encode($responseArray);
