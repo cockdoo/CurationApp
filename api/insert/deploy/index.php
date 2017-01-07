@@ -8,7 +8,7 @@ $result = mysql_query($query) or die(mysql_error());
 $num = 0;
 while ($row = mysql_fetch_assoc($result)) {
     $num ++;
-    echo $num;
+    echo "ID:".$row["id"]." ";
     $lat = $row["lat"];
     $lng = $row["lng"];
     $title = $row["title"];

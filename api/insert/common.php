@@ -15,7 +15,6 @@ function test() {
 
 function get_gps_from_address($address=''){
   $address_array = explode(" ", $address);
-  // var_dump($address_array);
 
   $res['prefecture'] = "";
   $res['locality'] = "";
@@ -94,6 +93,10 @@ function insertDB($title, $url, $imageUrl, $lat, $lng, $date, $media, $prefectur
   }else {
     $table = myTestTable;
   }
+
+  $escape = array("'");
+  $title = str_replace($escape, "", $title);
+
   $query = "INSERT INTO ".$table."(
   title,
   url,
