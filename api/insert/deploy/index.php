@@ -2,10 +2,13 @@
 include("../common.php");
 
 
-$query = "SELECT id, X(location) as lat, Y(location) as lng, GLength(GeomFromText(CONCAT('LineString(".$latArray[$i]." ".$lngArray[$i].",', X(location), ' ', Y(location),')'))) AS length, title, url, imageUrl, date, media, tag, prefecture, locality, sublocality FROM Curation";
+$query = "SELECT id, X(location) as lat, Y(location) as lng, title, url, imageUrl, date, media, tag, prefecture, locality, sublocality FROM Curation_test";
 $result = mysql_query($query) or die(mysql_error());
 
-while ($row = mysql_fetch_assoc($result)) {    
+$num = 0;
+while ($row = mysql_fetch_assoc($result)) {
+    $num ++;
+    echo $num;
     $lat = $row["lat"];
     $lng = $row["lng"];
     $title = $row["title"];
@@ -23,7 +26,7 @@ while ($row = mysql_fetch_assoc($result)) {
     if ($isAlready) {
         echo "この記事はすでにある！";
     }else {
-        echo "この記事は新しい！";
+        echo "本番のデータベースに追加！";
         insertDB($title, $url, $imageUrl, $lat, $lng, $date, $media, $prefecture, $locality, $sublocality, true);
     }
 }

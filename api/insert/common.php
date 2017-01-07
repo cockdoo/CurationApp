@@ -17,16 +17,21 @@ function get_gps_from_address($address=''){
   $address_array = explode(" ", $address);
   // var_dump($address_array);
 
+  $res['prefecture'] = "";
+  $res['locality'] = "";
+  $res['sublocality'] = "";
+
+  if (preg_match("/(jpg|png|JPG|PNG|gif|GIF|http|img)/i", $address)) {
+    return nil;
+  }
+
   $res = array();
   $req = 'http://maps.google.com/maps/api/geocode/xml';
   $req .= '?address='.urlencode($address);
   $req .= '&sensor=false';
   $req .= '&language=ja';
+  
   $xml = simplexml_load_file($req) or die('XML parsing error');
-
-  $res['prefecture'] = "";
-  $res['locality'] = "";
-  $res['sublocality'] = "";
 
   if ($xml->status == 'OK') {
     $location = $xml->result->geometry->location;
