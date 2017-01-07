@@ -6,6 +6,7 @@ $con = mysql_connect(server, user, pass) or die(mysql_error());
 mysql_select_db(myDatabase, $con) or die(mysql_error());
 mysql_query('set names utf8',$con);
 
+const myTestTable = "Curation_test";
 const myTable = "Curation";
 
 function test() {
@@ -81,8 +82,14 @@ function get_gps_from_address($address=''){
 //   $xml = simplexml_load_file($req) or die('XML parsing error');
 // }
 
-function insertDB($title, $url, $imageUrl, $lat, $lng, $date, $media, $prefecture, $locality, $sublocality) {
-  $query = "INSERT INTO ".myTable."(
+function insertDB($title, $url, $imageUrl, $lat, $lng, $date, $media, $prefecture, $locality, $sublocality, $isProduction) {
+  $table;
+  if ($isProduction) {
+    $table = myTable;
+  }else {
+    $table = myTestTable;
+  }
+  $query = "INSERT INTO ".$table."(
   title,
   url,
   imageUrl,
@@ -109,8 +116,14 @@ function insertDB($title, $url, $imageUrl, $lat, $lng, $date, $media, $prefectur
   mysql_query($query) or die(mysql_error());
 }
 
-function isAlreadyInDatabase($url, $lat, $lng) {
-  $query = "SELECT X(location) as lat, Y(location) as lng, url FROM ".myTable." where url = '".(string)$url."'";
+function isAlreadyInDatabase($url, $lat, $lng, $isProduction) {
+  $table;
+  if ($isProduction) {
+    $table = myTable;
+  }else {
+    $table = myTestTable;
+  }
+  $query = "SELECT X(location) as lat, Y(location) as lng, url FROM ".$table." where url = '".(string)$url."'";
   $result = mysql_query($query) or die(mysql_error());
   $isAlready = false;
   $responseArray = array();
