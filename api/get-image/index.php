@@ -38,7 +38,7 @@ for ($h=0; $h < count($length); $h++) {
     }
 }
 
-echo $response;
+header( "Location: ".$response ) ;
 
  ?>
 
